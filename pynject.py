@@ -149,11 +149,19 @@ class FetchThread(threading.Thread):
         self.nstrings  = nstrings
 
     def run(self):
-        try:
-            output = self.injector.sqlInject( self.what, self.table, self.where, self.index, self.xtype, self.nstrings )
+        try:    
+            # Attempt for 5 times if output == None 
+            for attempt in range(0,5):
+                output = self.injector.sqlInject( self.what, self.table, self.where, self.index, self.xtype, self.nstrings )
+                if output != None:
+                    break
+                
+            if output == None:
+                print( "! WARNING: Thread n¡{0} received None output, probably something is wrong in your injection!".format(self.index) )
+                
             self.container[self.index] = output
         except Exception as e:
-            print( "! Exception in thread nÂ°{0} : {1}".format( self.index, e ) )
+            print( "! Exception in thread n¡{0} : {1}".format( self.index, e ) )
         
 class Pynject:
     def __init__( self, url, marker, comment, max_threads = 30, verbose = False ):
