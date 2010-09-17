@@ -1,0 +1,13 @@
+Pynject 1.0 - An automatic MySQL injector and data dumper tool.
+Copyright 2010-2011 Simone Margaritelli <evilsocket@gmail.com>
+http://www.evilsocket.net
+
+Pynject is a tool to automatize data dumping AFTER you found some SQL injection with a visible UNION, for instance with tools like sqlibf.
+Once you have the union injection, just give it to Pynject and it will fetch any data you want from the db, in a multithreaded fashion, so
+it's incredibly FAST compared to other tools!!!
+
+For more info, examples and instructions:
+
+	pynject.py -h
+
+Enjoy ^^
