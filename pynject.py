@@ -299,6 +299,7 @@ class Pynject:
 
         if end == -1:
             rcnumber = self.sqlInject( what = "COUNT(" + columns[0] + ")", table = db + "." + table, where = None, index = None, xtype = "int" )
+            end      = rcnumber
         else:
             rcnumber = end - start
             
@@ -509,7 +510,7 @@ if __name__ == '__main__':
             parser.error( "No database or table specified." )
         elif o.action == "records" and (o.database == None or o.table == None or o.fields == None):
             parser.error( "No database, table or fields specified." )
-        elif o.end != -1 and o.end < o.start:
+        elif o.end != -1 and int(o.end) < int(o.start):
             parser.error( "End index can't be smaller than start index." )
 
         pynject = Pynject( url = o.url, marker = o.marker, comment = o.comment, max_threads = int(o.threads), verbose = o.verbose, debug = o.debug )
