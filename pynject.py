@@ -157,19 +157,20 @@ class FetchThread(threading.Thread):
                     break
                 
             if output == None:
-                print( "! WARNING: Thread n¡{0} received None output, probably something is wrong in your injection!".format(self.index) )
+                print( "! WARNING: Thread {0} received None output, probably something is wrong in your injection!".format(self.index) )
                 
             self.container[self.index] = output
         except Exception as e:
-            print( "! Exception in thread n¡{0} : {1}".format( self.index, e ) )
+            print( "! Exception in thread {0} : {1}".format( self.index, e ) )
         
 class Pynject:
-    def __init__( self, url, marker, comment, max_threads = 30, verbose = False ):
+    def __init__( self, url, marker, comment, max_threads = 30, verbose = False, debug = False ):
         self.url     = url
         self.marker  = marker
         self.comment = comment
         self.window  = max_threads
         self.verbose = verbose
+        self.debug   = debug
         self.dbs     = []
         self.tables  = {}
         self.columns = {}
@@ -397,6 +398,8 @@ class Pynject:
         return "CHAR(" + ','.join(seq) + ")"
 
     def __httpGet(self,url):
+        if self.debug:
+            print( "[QUERY DEBUG] : {0}".format(url) )
         # TODO: Handle useragent, proxy, ecc ecc
         return urllib.request.urlopen(url).read().decode('iso-8859-1')
 
@@ -467,6 +470,8 @@ if __name__ == '__main__':
         parser.add_option( "-m", "--marker",   action="store",       dest="marker",   default=None,    help="Marker used in the url to identify visible item.")
         parser.add_option( "-c", "--comment",  action="store",       dest="comment",  default="--",    help="String used as comment to end the query.")
         parser.add_option( "-v", "--verbose",  action="store_true",  dest="verbose",  default=False,   help="Make Pynject prints fetched data at runtime.")
+        parser.add_option( "-d", "--debug",    action="store_true",  dest="debug",    default=False,   help="Make Pynject prints every HTTP request.")
+
         parser.add_option( "-s", "--start",    action="store",       dest="start",    default=0,       help="If fetching records, start from this index.")
         parser.add_option( "-e", "--end",      action="store",       dest="end",      default=-1,      help="If fetching records, end at this index.")
         parser.add_option( "-t", "--threads",  action="store",       dest="threads",  default=30,      help="Set maximum number of running threads (default 30)." )
@@ -507,7 +512,7 @@ if __name__ == '__main__':
         elif o.end != -1 and o.end < o.start:
             parser.error( "End index can't be smaller than start index." )
 
-        pynject = Pynject( url = o.url, marker = o.marker, comment = o.comment, max_threads = int(o.threads), verbose = o.verbose )
+        pynject = Pynject( url = o.url, marker = o.marker, comment = o.comment, max_threads = int(o.threads), verbose = o.verbose, debug = o.debug )
 
         if o.action == "dbs":
             pynject.fetchDatabases()
