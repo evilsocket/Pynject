@@ -175,6 +175,8 @@ class Pynject:
         self.tables  = {}
         self.columns = {}
         self.records = {}
+        self.query   = None
+        self.data    = None
         self.banner()
         
     def banner(self):
@@ -183,7 +185,9 @@ class Pynject:
                "\thttp://www.evilsocket.net\n\n" );
 
     def execQuery( self, query ):
-        print( "@ Executing query '{0}' .".format(query) )
+        print( "@ Executing user query ." )
+        
+        self.query = query
         
         # encode all '...' strings to CHR(...)
         rex     = re.compile( "'([^']+)'" )
@@ -198,8 +202,7 @@ class Pynject:
             for string in strings:
                 query = query.replace( '"{0}"'.format(string), self.__stringToChrSeq(string) )
 
-        data = self.sqlInject( what = "({0})".format( urllib.parse.quote(query) ), table = None, where = None, index = None, xtype = "string" )
-        return data
+        self.data = self.sqlInject( what = "({0})".format( urllib.parse.quote(query) ), table = None, where = None, index = None, xtype = "string" )
 
     def fetchDatabases( self ):
         print( "@ Fetching number of dbs ." )
@@ -456,6 +459,9 @@ class Report:
                     print( "\tTABLE " + table + " :" )
                     for record in self.container.records[table]:
                         print( "\t\t{0}".format( ", ".join(record) ) )
+            elif self.options.query != None:
+                print( "\t{0}\n\t\t{1}".format( self.container.query, self.container.data ) )
+                
      
 if __name__ == '__main__':
     try:
@@ -526,7 +532,7 @@ if __name__ == '__main__':
         elif o.action == "struct":
             pynject.fetchWholeStructure()
         elif o.query != None:
-            print( "\n\n"+ pynject.execQuery(o.query) )
+            pynject.execQuery(o.query)
 
         report = Report( pynject, o )
         report.show()        
