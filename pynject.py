@@ -460,8 +460,8 @@ class Report:
 if __name__ == '__main__':
     try:
         print( "\n\tPynject 1.0 - An automatic MySQL injector and data dumper tool.\n" +
-               "\tCopyleft Simone Margaritelli <evilsocket@gmail.com>\n" +
-               "\thttp://www.evilsocket.net\n\n" );
+               "\tCopyleft Simone Margaritelli <evilsocket@backbox.org>\n" +
+               "\thttp://www.evilsocket.net\n\thttp://www.backbox.org\n\n" );
                
         parser = OptionParser( usage = "usage: %prog [options] [action] [output method]\n\n" +
                                        "EXAMPLES:\n" +
